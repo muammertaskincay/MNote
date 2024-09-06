@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,11 +13,14 @@ using System.Net;
 using System.Reflection;
 using Newtonsoft.Json;
 using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace newlogin
 {
     public partial class Form1 : Form
     {
+
+        private static readonly Version currentVersion = new Version("1.0.0.1");
 
         private async void CheckForUpdates()
         {
@@ -25,18 +28,32 @@ namespace newlogin
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    string json = await client.GetStringAsync("https://muammertaskincay.github.io/update-checker/update_info.json");
+                    // Kişisel erişim belirtecinizi buraya ekleyin
+                    string personalAccessToken = "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";
 
+                    // Yetkilendirme başlığını ayarlayın
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", personalAccessToken);
+
+                    // Özel deponuzdaki JSON dosyasının URL'sini buraya ekleyin
+                    string url = "https://raw.githubusercontent.com/muammertaskincay/update-checker/main/update_info.json";
+
+                    // JSON dosyasını indirin
+                    string json = await client.GetStringAsync(url);
+
+                    // JSON verisini dinamik bir nesneye dönüştürün
                     dynamic updateInfo = JsonConvert.DeserializeObject(json);
-
                     Version latestVersion = new Version(updateInfo.latestVersion.ToString());
                     Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
+                    // Eğer mevcut sürümden yeni bir sürüm varsa kullanıcıyı bilgilendirin
                     if (currentVersion < latestVersion)
                     {
-                        DialogResult result = MessageBox.Show($"Yeni bir sürüm mevcut: {latestVersion}. Güncellemek ister misiniz?\n\n{updateInfo.releaseNotes}", "Güncelleme Mevcut", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                        DialogResult result = MessageBox.Show($"Yeni bir sürüm mevcut: {latestVersion}." +
+                            $" Güncellemek ister misiniz?\n\n{updateInfo.releaseNotes}", "Güncelleme Mevcut",
+                            MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                         if (result == DialogResult.Yes)
                         {
+                            // Güncelleme linkini açın
                             Process.Start(new ProcessStartInfo
                             {
                                 FileName = updateInfo.downloadUrl.ToString(),
@@ -49,10 +66,10 @@ namespace newlogin
             }
             catch (Exception ex)
             {
+                // Hata mesajı gösterin
                 MessageBox.Show($"Güncellemeleri kontrol ederken bir hata oluştu: {ex.ToString()}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
 
 
@@ -96,7 +113,9 @@ namespace newlogin
             label2.BackColor = Color.FromArgb(0, 0, 0, 0); // Şeffaf arka plan
             label3.BackColor = Color.FromArgb(0, 0, 0, 0); // Şeffaf arka plan
             label4.BackColor = Color.FromArgb(0, 0, 0, 0); // Şeffaf arka plan
-            
+            label5.BackColor = Color.FromArgb(0, 0, 0, 0); // Şeffaf arka plan
+            linkLabel1.BackColor = Color.FromArgb(0, 0, 0, 0); // Şeffaf arka plan
+
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -286,6 +305,15 @@ namespace newlogin
         private void Form1_Load(object sender, EventArgs e)
         {
             CheckForUpdates();
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            // ForgotPasswordForm'un bir örneğini oluşturun
+            ForgotPasswordForm forgotPasswordForm = new ForgotPasswordForm();
+
+            // Formu göster
+            forgotPasswordForm.ShowDialog(); 
         }
     }
 }
